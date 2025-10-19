@@ -1,0 +1,5 @@
+authtoken: <YOUR_NGROK_AUTHTOKEN>
+tunnels:
+  daraz:
+    addr: 5000
+    proto: http

@@ -1,0 +1,25 @@
+name: MCP Automation
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * *"  # Run daily at 2 AM UTC
+jobs:
+  run-mcp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run MCP pipeline
+        run: |
+          python3 scraper.py
+          python3 preprocess.py
+          python3 dims.py
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dims
+          path: artifacts/dims.pkl

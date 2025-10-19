@@ -1,0 +1,11 @@
+requests
+beautifulsoup4
+pandas
+numpy
+scikit-learn
+umap-learn
+flask
+gunicorn
+python-dotenv
+joblib
+PyYAML
