@@ -1,0 +1,16 @@
+[Unit]
+Description=Ngrok Tunnel for Daraz API
+After=network.target daraz-mcp.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/daraz-scraper
+ExecStart=/usr/bin/ngrok http 5000 --log=stdout
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
