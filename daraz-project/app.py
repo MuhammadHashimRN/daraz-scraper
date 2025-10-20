@@ -10,6 +10,7 @@ import dims
 app = Flask(__name__)
 
 # Paths for generated files
+RAW_CSV = "raw_products.csv"
 PROCESSED_CSV = "processed_products.csv"
 PLOTS = {
     "pca": "pca_combined.png",
@@ -20,8 +21,8 @@ PLOTS = {
 }
 
 # Utility: run scripts in a thread to avoid blocking
-def run_in_thread(target):
-    thread = threading.Thread(target=target)
+def run_in_thread(target, *args, **kwargs):
+    thread = threading.Thread(target=target, args=args, kwargs=kwargs)
     thread.start()
     return thread
 
@@ -33,15 +34,28 @@ def home():
 
 @app.route("/scrape")
 def run_scraper():
-    thread = run_in_thread(scraper.run)
+    def scrape_thread():
+        try:
+            num_products = scraper.scrape_laptops(search_term="laptop", max_pages=5, out_file=RAW_CSV)
+            print(f"✅ Scraper finished, {num_products} products saved.")
+        except Exception as e:
+            print(f"❌ Scraper failed: {e}")
+
+    run_in_thread(scrape_thread)
     return jsonify({"status": "Scraper started in background"}), 202
+
 
 @app.route("/process")
 def run_process():
-    def process_all():
-        preprocess.run()
-        dims.run()
-    thread = run_in_thread(process_all)
+    def process_thread():
+        try:
+            preprocess.run()
+            dims.run()
+            print("✅ Processing + dimensionality reduction finished.")
+        except Exception as e:
+            print(f"❌ Processing failed: {e}")
+
+    run_in_thread(process_thread)
     return jsonify({"status": "Processing started in background"}), 202
 
 @app.route("/csv")
@@ -59,16 +73,19 @@ def get_plot(name):
     else:
         return jsonify({"error": f"Plot {name} not found"}), 404
 
-# Optional: trigger all steps in sequence
 @app.route("/all")
 def run_all():
-    def all_steps():
-        scraper.run()
-        preprocess.run()
-        dims.run()
-    thread = run_in_thread(all_steps)
+    def all_thread():
+        try:
+            num_products = scraper.scrape_laptops(search_term="laptop", max_pages=5, out_file=RAW_CSV)
+            preprocess.run()
+            dims.run()
+            print(f"✅ All steps finished. {num_products} products scraped and processed.")
+        except Exception as e:
+            print(f"❌ All steps failed: {e}")
+
+    run_in_thread(all_thread)
     return jsonify({"status": "Scraping + Processing + Dims started"}), 202
 
 if __name__ == "__main__":
-    # Make accessible externally
     app.run(host="0.0.0.0", port=5000)
