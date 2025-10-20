@@ -1,9 +1,0 @@
-[Unit]
-Description=Daraz MCP Automation Service
-After=network.target
-
-[Service]
-Type=oneshot
-WorkingDirectory=/home/ubuntu/daraz-project
-ExecStart=/home/ubuntu/daraz-project/mcp.sh
-User=ubuntu

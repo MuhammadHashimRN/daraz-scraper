@@ -1,20 +1,35 @@
-#!/bin/bash
-# One-step EC2 deployment script
+echo "Deploying Daraz Scraper API..."
 
-set -e
-sudo apt update
-sudo apt install -y python3-venv python3-pip git
+# Navigate to project directory
+cd ~/daraz-scraper
 
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+# Stop services if running
+sudo systemctl stop daraz-mcp.service
+sudo systemctl stop ngrok-tunnel.service
+sleep 2
 
-mkdir -p artifacts
-python3 scraper.py
-python3 preprocess.py
-python3 dims.py
+# Start Flask API
+echo "Starting Flask API..."
+sudo systemctl start daraz-mcp.service
+sudo systemctl enable daraz-mcp.service
+sleep 3
 
-# Run Flask API via Gunicorn in background
-nohup gunicorn -w 4 -b 0.0.0.0:5000 app:app > gunicorn.log 2>&1 &
+# Start ngrok tunnel
+echo "🌐 Starting ngrok tunnel..."
+sudo systemctl start ngrok-tunnel.service
+sudo systemctl enable ngrok-tunnel.service
+sleep 5
 
-echo "Deployment complete. Check gunicorn.log for details."
+# Get and display ngrok URL
+echo ""
+echo "🔗 Your public API URL:"
+curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url'
+echo ""
+
+echo "✅ Deployment complete!"
+echo ""
+echo "📝 Useful commands:"
+echo "   sudo systemctl status daraz-mcp.service"
+echo "   sudo journalctl -u daraz-mcp.service -f"
+echo "   sudo systemctl restart daraz-mcp.service"
+echo ""

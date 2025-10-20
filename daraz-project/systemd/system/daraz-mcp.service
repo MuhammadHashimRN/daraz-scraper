@@ -1,0 +1,17 @@
+[Unit]
+Description=Daraz Scraper Flask API
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/daraz-scraper
+Environment="PATH=/home/ubuntu/daraz-scraper/venv/bin"
+ExecStart=/home/ubuntu/daraz-scraper/venv/bin/python app.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
