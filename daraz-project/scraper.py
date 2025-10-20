@@ -3,58 +3,54 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import time, random, json
 
-SEARCH_TERM = "laptop"  # Change this keyword to scrape different product categories
-MAX_PAGES = 5            # Number of search pages to scrape
+SEARCH_TERM = "laptop"
+MAX_PAGES = 5
 OUT = "raw_products.csv"
-headers = {"User-Agent": "Mozilla/5.0"}
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+}
 
 rows = []
 
 for page in range(1, MAX_PAGES + 1):
-    url = f"https://www.daraz.pk/catalog/?q={SEARCH_TERM}&page={page}"
-    r = requests.get(url, headers=headers, timeout=10)
+    print(f"Scraping page {page}...")
+    url = f"https://www.daraz.pk/catalog/?q={SEARCH_TERM}&page={page}&ajax=true"
+
+    try:
+        r = requests.get(url, headers=headers, timeout=10)
+    except Exception as e:
+        print(f"❌ Request failed on page {page}: {e}")
+        continue
 
     if r.status_code != 200:
+        print(f"⚠️ Skipping page {page} — HTTP {r.status_code}")
         time.sleep(2)
         continue
 
-    soup = BeautifulSoup(r.text, "html.parser")
-
-    # Attempt to extract items using CSS selectors
-    items = soup.select("div.c2prKC") or soup.select("div.info--ifj7U")
-
-    # If no items found, try parsing embedded JSON data
-    if not items:
-        scripts = soup.select("script")
-        text = ""
-        for s in scripts:
-            if "window.pageData" in s.text:
-                text = s.text
-                break
-        if not text:
+    try:
+        data = r.json()
+        items = data.get("mods", {}).get("listItems", [])
+        if not items:
+            print(f"⚠️ No products found on page {page}")
             continue
-        start = text.find("{")
-        try:
-            data = json.loads(text[start:text.rfind("}") + 1])
-            for hit in data.get("mods", {}).get("listItems", []):
-                rows.append({
-                    "title": hit.get("title"),
-                    "price": hit.get("price"),
-                    "rating": hit.get("rating")
-                })
-            continue
-        except Exception:
-            pass
 
-    # Basic HTML fallback scraping
-    for it in items:
-        title = it.select_one("a").get_text().strip() if it.select_one("a") else ""
-        price = it.select_one("span").get_text().strip() if it.select_one("span") else ""
-        rows.append({"title": title, "price": price})
+        for hit in items:
+            rows.append({
+                "title": hit.get("name"),
+                "brand": hit.get("brandName"),
+                "price": hit.get("price"),
+                "rating": hit.get("ratingScore"),
+                "reviews": hit.get("review"),
+                "url": "https:" + hit.get("productUrl", "")
+            })
+    except json.JSONDecodeError:
+        print(f"❌ Failed to parse JSON on page {page}")
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
 
-    time.sleep(random.uniform(1, 2))  # Be polite to avoid blocking
+    time.sleep(random.uniform(1, 2))
 
-# Save scraped results
+# Save to CSV
 df = pd.DataFrame(rows)
 df.to_csv(OUT, index=False)
-print("Saved", OUT)
+print(f"✅ Saved {len(df)} products to {OUT}")

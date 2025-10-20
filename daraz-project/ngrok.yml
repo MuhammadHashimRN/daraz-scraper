@@ -1,4 +1,4 @@
-authtoken: <YOUR_NGROK_AUTHTOKEN>
+authtoken: <34IqOiIijAgigtHlVcLx9k5KZnd_298WR9VHDDL2WJSxGA8DL>
 tunnels:
   daraz:
     addr: 5000

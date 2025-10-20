@@ -1,38 +1,74 @@
-from flask import Flask, jsonify, request
-import joblib
-import pandas as pd
+from flask import Flask, jsonify, send_file
+import os
+import threading
+
+# Import your scripts
+import scraper
+import preprocess
+import dims
 
 app = Flask(__name__)
 
-# Load precomputed artifacts
-art = joblib.load("artifacts/features.pkl")
-dims = joblib.load("artifacts/dims.pkl")
-raw = art["raw"]
+# Paths for generated files
+PROCESSED_CSV = "processed_products.csv"
+PLOTS = {
+    "pca": "pca_combined.png",
+    "umap_ram": "umap_heatmap_ram_gb.png",
+    "umap_storage": "umap_heatmap_storage_gb.png",
+    "umap_price": "umap_heatmap_price.png",
+    "umap_composite": "umap_composite.png"
+}
 
-@app.route("/status")
-def status():
-    """Health check endpoint"""
-    return jsonify({"status": "ok", "rows": len(raw)})
+# Utility: run scripts in a thread to avoid blocking
+def run_in_thread(target):
+    thread = threading.Thread(target=target)
+    thread.start()
+    return thread
 
-@app.route("/products")
-def products():
-    """Return top N products with optional PCA/UMAP embeddings"""
-    n = int(request.args.get("n", 10))
-    reduce = request.args.get("reduce", "")
-    out = raw.head(n).to_dict(orient="records")
+# -------- Endpoints --------
 
-    if reduce == "pca":
-        arr = dims["X_pca"][:n, :2].tolist()
-        for i, o in enumerate(out):
-            o["embed"] = arr[i]
+@app.route("/")
+def home():
+    return jsonify({"message": "Daraz Scraper API is running!"})
 
-    if reduce == "umap":
-        arr = dims["X_umap"][:n, :2].tolist()
-        for i, o in enumerate(out):
-            o["embed"] = arr[i]
+@app.route("/scrape")
+def run_scraper():
+    thread = run_in_thread(scraper.run)
+    return jsonify({"status": "Scraper started in background"}), 202
 
-    return jsonify(out)
+@app.route("/process")
+def run_process():
+    def process_all():
+        preprocess.run()
+        dims.run()
+    thread = run_in_thread(process_all)
+    return jsonify({"status": "Processing started in background"}), 202
+
+@app.route("/csv")
+def get_csv():
+    if os.path.exists(PROCESSED_CSV):
+        return send_file(PROCESSED_CSV, as_attachment=True)
+    else:
+        return jsonify({"error": "Processed CSV not found"}), 404
+
+@app.route("/plot/<name>")
+def get_plot(name):
+    fname = PLOTS.get(name)
+    if fname and os.path.exists(fname):
+        return send_file(fname, as_attachment=True)
+    else:
+        return jsonify({"error": f"Plot {name} not found"}), 404
+
+# Optional: trigger all steps in sequence
+@app.route("/all")
+def run_all():
+    def all_steps():
+        scraper.run()
+        preprocess.run()
+        dims.run()
+    thread = run_in_thread(all_steps)
+    return jsonify({"status": "Scraping + Processing + Dims started"}), 202
 
 if __name__ == "__main__":
-    # Run locally for testing; on EC2, use gunicorn instead
+    # Make accessible externally
     app.run(host="0.0.0.0", port=5000)
