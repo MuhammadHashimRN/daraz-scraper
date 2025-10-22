@@ -10,3 +10,9 @@ gunicorn
 python-dotenv
 joblib
 PyYAML
+flask-socketio
+flasgger
+plotly
+python-socketio
+python-engineio
+

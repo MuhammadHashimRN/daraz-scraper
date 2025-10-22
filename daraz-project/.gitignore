@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+
+# Data files
+*.csv
+price_history.csv
+
+# Generated files
+static/images/*.jpg
+static/images/*.png
+static/plots/*.png
+static/plots/*.html
+static/plots/*.json
+
+# Logs
+*.log
+cron.log
+
+# Environment
+.env

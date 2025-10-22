@@ -1,35 +1,64 @@
-echo "Setting up Daraz Scraper API on EC2..."
+echo "🚀 Setting up Enhanced Daraz Scraper API..."
 
 # Update system
 sudo apt-get update
 sudo apt-get upgrade -y
 
-# Install Python 3 and pip
+# Install Python and dependencies
 sudo apt-get install -y python3 python3-pip python3-venv git curl jq
 
-# Create project directory
-mkdir -p ~/daraz-scraper
-cd ~/daraz-scraper
+# Navigate to project
+cd ~/daraz-scraper/daraz-project
 
-# Create virtual environment
+# Create/activate virtual environment
 python3 -m venv venv
 source venv/bin/activate
 
-# Install Python dependencies
+# Install Python packages
 pip install --upgrade pip
-pip install flask requests beautifulsoup4 pandas scikit-learn umap-learn matplotlib
+pip install -r requirements.txt
 
-# Install ngrok
-echo "📦 Installing ngrok..."
-curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
-echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
-sudo apt-get update
-sudo apt-get install -y ngrok
+# Create necessary directories
+mkdir -p static/images
+mkdir -p static/plots
+
+# Create the requirements.txt if not exists
+cat > requirements.txt <<'EOF'
+requests
+beautifulsoup4
+matplotlib
+pandas
+numpy
+scikit-learn
+umap-learn
+flask
+gunicorn
+python-dotenv
+joblib
+PyYAML
+flask-socketio
+flasgger
+plotly
+python-socketio
+python-engineio
+
+pip install -r requirements.txt
 
 echo ""
-echo "⚠️  IMPORTANT: Configure ngrok with your auth token:"
-echo "   1. Sign up at https://ngrok.com"
-echo "   2. Get token from https://dashboard.ngrok.com/get-started/your-authtoken"
-echo "   3. Run: ngrok config add-authtoken YOUR_TOKEN_HERE"
+echo "✅ Enhanced setup complete!"
 echo ""
-echo "✅ Setup complete! Next: add your token and run deploy.sh"
+echo "📋 Features installed:"
+echo "   ✓ Real-time WebSocket updates"
+echo "   ✓ Advanced clustering (K-Means, DBSCAN)"
+echo "   ✓ Image downloading"
+echo "   ✓ Price tracking over time"
+echo "   ✓ Interactive visualizations (Plotly)"
+echo "   ✓ Advanced search & filters"
+echo "   ✓ Performance monitoring"
+echo "   ✓ API documentation (Swagger)"
+echo ""
+echo "🔗 Access points:"
+echo "   Dashboard: http://your-url/dashboard"
+echo "   API Docs: http://your-url/api/docs"
+echo "   Metrics: http://your-url/metrics"
+echo ""
