@@ -5,9 +5,9 @@ After=network.target
 [Service]
 Type=simple
 User=ubuntu
-WorkingDirectory=/home/ubuntu/daraz-scraper
-Environment="PATH=/home/ubuntu/daraz-scraper/venv/bin"
-ExecStart=/home/ubuntu/daraz-scraper/venv/bin/python app.py
+WorkingDirectory=/home/ubuntu/daraz-scraper/daraz-project
+Environment="PATH=/home/ubuntu/venv/bin"
+ExecStart=/bin/bash /home/ubuntu/daraz-scraper/daraz-project/start_flask.sh
 Restart=always
 RestartSec=10
 StandardOutput=journal

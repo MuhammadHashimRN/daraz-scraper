@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, send_file
+from flask import Flask, jsonify, send_file, send_from_directory 
 import os
 import threading
 
@@ -8,6 +8,9 @@ import preprocess
 import dims
 
 app = Flask(__name__)
+
+from flask_cors import CORS
+CORS(app)
 
 # Paths for generated files
 RAW_CSV = "raw_products.csv"
@@ -205,6 +208,12 @@ def clean_files():
         "removed_files": removed
     })
 
+
+
+@app.route('/dashboard')
+def dashboard():
+    return send_from_directory('static', 'index.html')
+
 if __name__ == "__main__":
     print("🚀 Starting Daraz Scraper API...")
     print("📍 API will be available at: http://localhost:5000")
@@ -220,3 +229,4 @@ if __name__ == "__main__":
     print("\n✨ Ready!\n")
     
     app.run(host="0.0.0.0", port=5000, debug=True)
+
